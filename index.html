@@ -445,7 +445,7 @@ async function doOnline(q){
   try{
     var r=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      headers:{'Content-Type':'application/json','x-api-key':'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','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
     var data=await r.json();
