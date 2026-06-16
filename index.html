@@ -291,7 +291,7 @@ function renderSheet(){
     +'<div id="shMsg" class="msg"></div>'
     +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
     +'<input class="inp" id="shSrch" placeholder="search..." oninput="filterSheet(this.value)" style="flex:1">'
-    +'<button onclick="sheetSort=sheetSort===\'newest\'?\'oldest\':\'newest\';renderCards()" style="padding:8px 10px;background:none;border:1.5px solid var(--g);color:var(--g);font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:1px;white-space:nowrap;cursor:pointer">'+(sheetSort==='newest'?'newest &#9660;':'oldest &#9650;')+'</button>'
+    +'<button onclick="sheetSort=sheetSort===\'newest\'?\'oldest\':\'newest\';renderCards()" style="padding:8px 10px;background:none;border:1.5px solid var(--g);color:var(--g);font-size:9px;letter-spacing:1px;white-space:nowrap;cursor:pointer">'+(sheetSort==='newest'?'newest &#9660;':'oldest &#9650;')+'</button>'
     +'</div>'
     +'<table class="sheet"><thead><tr><th>#</th><th>English</th><th>Romaji</th><th>&#9733;</th><th></th></tr></thead>'
     +'<tbody id="shBody">'+shRows(f.slice().sort(function(a,b){var da=a.dateAdded||a.id||0,db=b.dateAdded||b.id||0;return sheetSort==='newest'?db-da:da-db;}))+'</tbody></table>'
@@ -301,7 +301,7 @@ function shAdd(){
   var en=(document.getElementById('shEn')||{value:''}).value.trim();
   var rom=(document.getElementById('shRom')||{value:''}).value.trim();
   if(!en||!rom){var m=document.getElementById('shMsg');if(m)m.textContent='Both fields required!';return;}
-  vocab.push({id:Date.now(),english:en,japanese:rom,romaji:rom,dateAdded:Date.now()});save();
+  vocab.push({id:Date.now(),english:en,japanese:rom,romaji:rom});save();
   document.getElementById('shEn').value='';document.getElementById('shRom').value='';
   var m=document.getElementById('shMsg');if(m){m.textContent='Added: "'+en+'"';setTimeout(function(){m.textContent='';},2500);}
   updateScore();renderCards();
@@ -398,7 +398,7 @@ function renderObCard(){
 }
 function obKnow(){
   var w=obWords[obIdx];
-  obAdded.push({id:Date.now()+obIdx,english:w.english,japanese:w.romaji,romaji:w.romaji,dateAdded:Date.now()+obIdx});
+  obAdded.push({id:Date.now()+obIdx,english:w.english,japanese:w.romaji,romaji:w.romaji});
   obIdx++;
   var b=document.getElementById('vcBtn');if(b)b.textContent=vocab.length+obAdded.length;
   renderObCard();
@@ -419,7 +419,7 @@ function doAdd(){
   var en=(document.getElementById('aEn')||{value:''}).value.trim();
   var rom=(document.getElementById('aRom')||{value:''}).value.trim();
   if(!en||!rom){var m=document.getElementById('addMsg');if(m)m.textContent='Both fields required!';return;}
-  vocab.push({id:Date.now(),english:en,japanese:rom,romaji:rom,dateAdded:Date.now()});save();
+  vocab.push({id:Date.now(),english:en,japanese:rom,romaji:rom});save();
   document.getElementById('aEn').value='';document.getElementById('aRom').value='';
   var m=document.getElementById('addMsg');if(m){m.textContent='\u2713 "'+en+'" added!';setTimeout(function(){m.textContent='';},2500);}
   updateScore();
@@ -476,11 +476,7 @@ function showStructuredAns(p){
   var nh=nt.map(function(tok){
     var cl=tok.replace(/[?!.,]/g,'').toLowerCase();
     var wi=wm[cl];var kn=inD.has(cl);
-    if(!kn){
-      // Gold whether or not it's in native_words
-      var eng=wi?wi.english:cl;
-      return '<span class="wu" data-r="'+cl+'" data-e="'+eng.replace(/"/g,'&quot;')+'">'+esc(tok)+'</span>';
-    }
+    if(!kn&&wi)return '<span class="wu" data-r="'+cl+'" data-e="'+wi.english.replace(/"/g,'&quot;')+'">'+esc(tok)+'</span>';
     return '<span style="color:var(--k)">'+esc(tok)+'</span>';
   }).join(' ');
   var bh=nt.map(function(tok){
@@ -501,9 +497,7 @@ function showStructuredAns(p){
     +'<button id="addPhrBtn" style="margin-top:12px;width:100%;padding:10px;background:none;border:1.5px solid var(--g);color:var(--g);font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">+ add phrase as flashcard</button>'
     +'</div></div>';
   var addBtn=d.querySelector('#addPhrBtn');
-  if(addBtn){
-    addBtn.addEventListener('click',function(){addPhraseCard(p.native_phrase,p.native_translation,addBtn);});
-  }
+  if(addBtn){addBtn.addEventListener('click',function(){addPhraseCard(p.native_phrase,p.native_translation,addBtn);});}
   d.querySelectorAll('.wu').forEach(function(el){
     function h(e){e.stopPropagation();e.preventDefault();showWordPopup(el,el.getAttribute('data-r'),el.getAttribute('data-e'));}
     el.addEventListener('click',h);el.addEventListener('touchend',h);
@@ -527,14 +521,14 @@ function showWordPopup(el,romaji,english){
 function addWP(romaji,english,el){
   document.querySelectorAll('.wpop').forEach(function(p){p.remove();});
   if(vocab.find(function(w){return w.romaji.toLowerCase()===romaji.toLowerCase();})){el.style.color='#27ae60';return;}
-  vocab.push({id:Date.now(),english:english,japanese:romaji,romaji:romaji,dateAdded:Date.now()});
+  vocab.push({id:Date.now(),english:english,japanese:romaji,romaji:romaji});
   save();updateScore();
   el.className='';el.style.color='#27ae60';el.style.fontWeight='bold';el.style.borderBottom='none';
 }
 function addPhraseCard(phrase,translation,btn){
   var eng=translation||prompt('English translation for this phrase?');
   if(!eng)return;
-  vocab.push({id:Date.now(),english:eng,japanese:phrase,romaji:phrase});
+  vocab.push({id:Date.now(),english:eng,japanese:phrase,romaji:phrase,dateAdded:Date.now()});
   save();updateScore();
   if(btn){btn.textContent='\u2713 added!';btn.style.background='var(--g)';btn.style.color='var(--k)';
   setTimeout(function(){btn.textContent='+ add phrase as flashcard';btn.style.background='none';btn.style.color='var(--g)';},2000);}
@@ -650,7 +644,16 @@ function renderResult(){
   var missed=quizBatch.filter(function(_,i){return quizScores[i]===false;});
   var msg=pct===100?'Perfect! &#127881; Flawless!':pct>=80?'Great work! &#128170;':pct>=60?'Good effort &mdash; keep going!':'Don\'t give up &mdash; missed words were starred!';
   var total=quizStartPos+quizBatch.length;
-  var celebHtml=quizCycleComplete?'<div class="celeb"><div class="celeb-icon">&#127881; &#11088; &#127881;</div><div class="celeb-title">Deck Complete!</div><div class="celeb-sub">All '+vocab.length+' words done! Starting fresh...</div></div>':'';
+  var celebHtml=quizCycleComplete
+    ?('<div style="text-align:center;padding:28px 16px;background:linear-gradient(135deg,#fff8ef,#f5ead5,#fff8ef);border:2px solid var(--g);margin-bottom:20px">'
+    +'<div style="font-size:48px;margin-bottom:10px">&#127881; &#11088; &#127882;</div>'
+    +'<div style="font-size:28px;font-weight:800;color:var(--k);margin-bottom:6px">Deck Complete!</div>'
+    +'<div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--g);margin-bottom:10px">You did it!</div>'
+    +'<div style="font-size:52px;font-weight:800;color:var(--g);line-height:1">'+vocab.length+'</div>'
+    +'<div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--l);margin-bottom:12px">words mastered</div>'
+    +'<div style="font-size:12px;color:var(--l);letter-spacing:1px">Starting a fresh new cycle...</div>'
+    +'</div>')
+    :'';
   var progHtml=!quizCycleComplete?'<div style="font-size:11px;letter-spacing:1px;color:var(--l);text-align:center;margin-bottom:12px">'+total+' / '+vocab.length+' words seen this cycle</div>':'';
   var mHtml=missed.length?'<div class="missed-list"><div class="missed-hdr">missed ('+missed.length+') &mdash; auto-starred &#9733;</div>'
     +missed.map(function(w){return '<div class="missed-row"><span>'+esc(w.english)+'</span><span class="missed-rom">'+esc(w.romaji||w.japanese)+'</span><button class="rsb'+(starred.has(w.id)?' on':'')+'" data-mid="'+w.id+'" onclick="starMissed(this)">'+(starred.has(w.id)?'&#9733;':'&#9734;')+'</button></div>';}).join('')+'</div>':'';
